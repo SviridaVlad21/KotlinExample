@@ -1,6 +1,5 @@
 package ru.skillbranch.kotlinexample.extensions
 
-class Iterable {
 
     /*Реализуй функцию расширения fun List.dropLastUntil(predicate: (T) -> Boolean): List ,
     в качестве аргумента принимает предикат (лямбда выражение возвращающее Boolean) и возвращат список в котором исключены все элементы с конца до тех пор
@@ -18,4 +17,3 @@ class Iterable {
         }
         return emptyList()
     }
-}
