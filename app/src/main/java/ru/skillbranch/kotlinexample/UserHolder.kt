@@ -35,6 +35,20 @@ object UserHolder {
         }
 
         return User.makeUser(fullName,null,null, phone = rawPhone).also { map[it.login] = it }
+    }   
+    
+    fun importUsers(list: List<String>): List<User>{
+        var finalList = mutableListOf<User>()
+        for(listItem in list){
+            finalList.add(User.importUser(
+                listItem.getStringInCSV(0),
+                email = listItem.getStringInCSV(1),
+                saltHash = listItem.getStringInCSV(2),
+                phone = listItem.getStringInCSV(3)
+            ))
+        }
+        print(finalList[0].userInfo)
+        return finalList
     }
 
     fun requestAccessCode(login: String) : Unit{
@@ -48,4 +62,6 @@ object UserHolder {
     private fun String.normalizeLogin() = if(contains("@")) trim() else normalizePhone()
 
     private fun String.validatePhone() = normalizePhone().matches("[+]\\d{11}".toRegex())
+
+    private fun String.getStringInCSV(position : Int) = split(";")[position].trim()
 }

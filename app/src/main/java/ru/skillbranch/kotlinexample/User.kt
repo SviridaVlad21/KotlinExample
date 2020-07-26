@@ -36,9 +36,7 @@ class User private constructor(
         }
         get() = _login!!
 
-    private val salt : String by lazy{
-        ByteArray(16).also { SecureRandom().nextBytes(it) }.toString()
-    }
+    private lateinit var salt : String
     private lateinit var passwordHash : String
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
@@ -51,6 +49,7 @@ class User private constructor(
         password: String
     ) : this(firstName, lastName, email = email, meta = mapOf("auth" to "password")){
         println("Secondary mail constructor")
+        salt = ByteArray(16).also { SecureRandom().nextBytes(it) }.toString()
         passwordHash = encrypt(password)
     }
 
@@ -60,10 +59,22 @@ class User private constructor(
         rawPhone: String
     ): this(firstName, lastName, rawPhone = rawPhone, meta = mapOf("auth" to "sms")){
         println("Secondary phone constructor")
+        salt = ByteArray(16).also { SecureRandom().nextBytes(it) }.toString()
         val code = generateAccessCode()
         passwordHash = encrypt(code)
         accessCode = code
         sendAccessCodeToUser(rawPhone, code)
+    }
+
+    constructor(
+        firstName: String,
+        lastName: String?,
+        email: String?,
+        phone: String?,
+        saltHash: String
+    ): this(firstName, lastName, email = email, rawPhone = phone, meta = mapOf("src" to "csv")){
+        salt = saltHash.split(":")[0].replace("[", "")
+        passwordHash = saltHash.split(":")[1]
     }
 
 
@@ -138,6 +149,21 @@ class User private constructor(
             return when{
                 !phone.isNullOrBlank() -> User(firstName, lastName, phone)
                 !email.isNullOrBlank() && !password.isNullOrBlank() -> User(firstName, lastName, email, password)
+                else -> throw IllegalArgumentException("Email or phone must not null or blank")
+            }
+        }
+
+        fun importUser(
+            fullName : String,
+            email: String?,
+            saltHash: String,
+            phone: String?
+        ) : User{
+            val (firstName, lastName) = fullName.fullNameToPair()
+
+            return when{
+                !phone.isNullOrBlank() -> User(firstName, lastName, null, phone, saltHash)
+                !email.isNullOrBlank() -> User(firstName, lastName, email, null, saltHash)
                 else -> throw IllegalArgumentException("Email or phone must not null or blank")
             }
         }
